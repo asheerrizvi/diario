@@ -4,10 +4,13 @@ const config = require('config');
 // const jwt = require('jsonwebtoken');
 
 const entrySchema = new mongoose.Schema({
-    dateCreated: {
+    createdAt: {
         type: Date,
         required: true,
         default: Date.now
+    },
+    updatedAt: {
+        type: Date
     },
     title: {
         type: String,

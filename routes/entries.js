@@ -5,23 +5,17 @@ const { User } = require('../models/user');
 const router = express.Router();
 const validate = require('../middleware/validate');
 const validateObjectId = require('../middleware/validateObjectId');
+const validateUserId = require('../middleware/validateUserId');
 
 // Get all entries of a particular user.
-router.get('/', async (req, res) => {
+router.get('/', validateUserId, async (req, res) => {
     const user = await User.findById(req.body.userId);
-    if (!user) return res.status(404).send('The user with the given ID could not be found!');
-
     res.send(user.entries);
 });
 
-// Get a particular entry by its unique ID
-router.get('/:id', validateObjectId, async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.body.userId)) {
-        return res.status(404).send('The user ID provided is invalid');
-    }
-
+// Get a particular entry by its unique ID.
+router.get('/:id', [validateObjectId, validateUserId] , async (req, res) => {
     const user = await User.findById(req.body.userId);
-    if (!user) return res.status(404).send('The user with the given ID could not be found!');
 
     const entry = user.entries.find((element) => {
         return element._id.equals(req.params.id);
@@ -32,13 +26,8 @@ router.get('/:id', validateObjectId, async (req, res) => {
 })
 
 // Push an entry for a particular user.
-router.post('/', validate(validateEntry), async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.body.userId)) {
-        return res.status(404).send('The user ID provided is invalid');
-    }
-
+router.post('/', [validateUserId, validate(validateEntry)], async (req, res) => {
     const user = await User.findById(req.body.userId);
-    if (!user) return res.status(404).send('The user with the given ID could not be found!');
 
     let entry = new Entry({
         title: req.body.title,
@@ -49,6 +38,23 @@ router.post('/', validate(validateEntry), async (req, res) => {
     await user.save();
 
     res.send(user);
+});
+
+// Update an existing entry by its ID.
+router.put('/:id', [validateObjectId, validateUserId, validate(validateEntry)], async (req, res) => {
+    const user = await User.findById(req.body.userId);
+
+    const entry = user.entries.find((element) => {
+        return element._id.equals(req.params.id);
+    });
+    if (!entry) return res.status(404).send('The entry with the given ID could not be found!');
+
+    entry.title = req.body.title;
+    entry.content = req.body.content;
+
+    await user.save();
+
+    res.send(entry);
 });
 
 module.exports = router;
