@@ -25,4 +25,9 @@ router.post('/', validate(validateUser), async (req, res) => {
     res.header('x-auth-token', token).send(_.pick(user, ['_id', 'name', 'email']));
 });
 
+router.delete('/', auth, async (req, res) => {
+    const user = await User.findByIdAndRemove(req.user._id);
+    res.status(200).send('Account deleted successfully.');
+});
+
 module.exports = router;

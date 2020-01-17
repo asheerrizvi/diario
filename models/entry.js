@@ -4,13 +4,15 @@ const config = require('config');
 // const jwt = require('jsonwebtoken');
 
 const entrySchema = new mongoose.Schema({
-    createdAt: {
+    created: {
         type: Date,
         required: true,
         default: Date.now
     },
-    updatedAt: {
-        type: Date
+    updated: {
+        type: Date,
+        required: true,
+        default: Date.now
     },
     title: {
         type: String,
@@ -29,7 +31,6 @@ const Entry = mongoose.model('Entry', entrySchema);
 
 function validateEntry(entry) {
     const schema = {
-        userId: Joi.string().required(),
         title: Joi.string().min(3).max(150).required(),
         content: Joi.string().max(1500000).required()
     };

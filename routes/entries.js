@@ -49,6 +49,7 @@ router.put('/:id', [auth, validateObjectId, validate(validateEntry)], async (req
 
     entry.title = req.body.title;
     entry.content = req.body.content;
+    entry.updated = Date.now();
 
     await user.save();
 
