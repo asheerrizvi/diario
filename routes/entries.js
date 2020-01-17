@@ -1,21 +1,21 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const router = express.Router();
+
 const { Entry, validateEntry } = require('../models/entry');
 const { User } = require('../models/user');
-const router = express.Router();
+const auth = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const validateObjectId = require('../middleware/validateObjectId');
 const validateUserId = require('../middleware/validateUserId');
 
-// Get all entries of a particular user.
-router.get('/', validateUserId, async (req, res) => {
-    const user = await User.findById(req.body.userId);
+router.get('/', auth, async (req, res) => {
+    const user = await User.findById(req.user._id).select('-password');
     res.send(user.entries);
 });
 
-// Get a particular entry by its unique ID.
-router.get('/:id', [validateObjectId, validateUserId] , async (req, res) => {
-    const user = await User.findById(req.body.userId);
+router.get('/:id', [auth, validateObjectId] , async (req, res) => {
+    const user = await User.findById(req.user._id).select('-password');
 
     const entry = user.entries.find((element) => {
         return element._id.equals(req.params.id);
@@ -25,9 +25,8 @@ router.get('/:id', [validateObjectId, validateUserId] , async (req, res) => {
     res.send(entry);
 })
 
-// Push an entry for a particular user.
-router.post('/', [validateUserId, validate(validateEntry)], async (req, res) => {
-    const user = await User.findById(req.body.userId);
+router.post('/', [auth, validate(validateEntry)], async (req, res) => {
+    const user = await User.findById(req.user._id).select('-password');
 
     let entry = new Entry({
         title: req.body.title,
@@ -40,9 +39,8 @@ router.post('/', [validateUserId, validate(validateEntry)], async (req, res) => 
     res.send(user);
 });
 
-// Update an existing entry by its ID.
-router.put('/:id', [validateObjectId, validateUserId, validate(validateEntry)], async (req, res) => {
-    const user = await User.findById(req.body.userId);
+router.put('/:id', [auth, validateObjectId, validate(validateEntry)], async (req, res) => {
+    const user = await User.findById(req.user._id).select('-password');
 
     const entry = user.entries.find((element) => {
         return element._id.equals(req.params.id);
