@@ -7,6 +7,12 @@ const { User, validateUser } = require('../models/user');
 const auth = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
+router.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 router.get('/me', auth, async (req, res) => {
     const user = await User.findById(req.user._id).select('-password');
     res.send(user);
@@ -22,7 +28,9 @@ router.post('/', validate(validateUser), async (req, res) => {
 
     await user.save();
     const token = user.generateAuthToken();
-    res.header('x-auth-token', token).send(_.pick(user, ['_id', 'name', 'email']));
+    let responseData = _.pick(user, ['id', 'name', 'email']);
+    responseData.token = token;
+    res.send(responseData);
 });
 
 router.delete('/', auth, async (req, res) => {
